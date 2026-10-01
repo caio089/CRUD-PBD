@@ -1,49 +1,125 @@
 # Aurora Vendas
 
-Sistema simples de vendas de uma mercearia: cadastro de clientes e produtos, registro de venda, consulta de pedidos e relatório.
+Sistema de vendas de uma mercearia: cadastro de clientes e produtos, registro de venda, consulta de pedidos e relatório.
 
-> Antes de entregar, preencha os campos abaixo.
+**Vídeo:** https://youtu.be/DNc1sK8VqmE
 
-- **Integrante:** [seu nome completo]
-- **Disciplina:** [nome da disciplina]
-- **Professor:** [nome do professor]
+- **Integrante:** Caio Campos
+- **Disciplina:** Projeto de Banco de Dados
+- **Professor:** Anderson Soares
 
-## Sobre o projeto
+## O que o sistema faz
 
-A loja precisa vender sem deixar o estoque errado e ver o total das vendas sem remontar a consulta na tela.
+A ideia é a loja vender sem bagunçar o estoque e sem montar a mesma consulta de relatório em várias telas.
 
-- A **procedure** grava a venda inteira (pedido, itens e baixa de estoque).
-- A **function** calcula o total de um pedido com o preço que foi gravado na hora.
-- A **view** junta pedido, cliente e itens para o relatório.
+Uma venda mexe em pedido, itens e estoque ao mesmo tempo. Se isso ficasse só no Python, dava para baixar o estoque e falhar na hora de gravar o pedido. Por isso a venda inteira está numa procedure do PostgreSQL. Se der erro no meio, nada fica salvo pela metade.
 
-## Tecnologias utilizadas
+Telas:
 
-- Python
-- Flask
+| Tela | Rota | Função |
+| --- | --- | --- |
+| Painel | `/` | Resumo de vendas, faturamento, clientes, produtos e estoque baixo |
+| Clientes | `/clientes` | CRUD de clientes (com busca) |
+| Produtos | `/produtos` | CRUD de produtos (com busca) |
+| Nova venda | `/vendas/nova` | Registra venda pela procedure |
+| Pedidos | `/pedidos` | Lista pedidos; total pela function |
+| Detalhe | `/pedidos/<id>` | Itens e total do pedido |
+| Relatório | `/relatorio` | Vendas filtradas pela view |
+
+## Tecnologias
+
+- Python + Flask
 - PostgreSQL
 - HTML e CSS
+- `psycopg` para conectar e rodar o SQL direto nas telas
 
-As telas chamam o SQL direto, com `psycopg`. Assim dá para ver a view, a function e a procedure no código.
+## Onde fica o banco
 
-## Banco de dados
+Os dados **não** ficam na pasta do projeto. A pasta `database/` só tem os scripts SQL (tabelas, view, function, procedure e inserts de exemplo). Esses arquivos vão pro GitHub.
 
-- **SGBD:** PostgreSQL
+Os registros ficam no PostgreSQL local, no banco `aurora_vendas`. A conexão vem do arquivo `.env` (copiado de `.env.example`):
 
-**Tabelas:** `clientes`, `produtos`, `pedidos`, `itens_pedido`
+```
+PGHOST=localhost
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=sua_senha
+PGDATABASE=aurora_vendas
+```
 
-**View:** `vw_relatorio_vendas`  
-Usada no painel e na tela Relatório. O `SELECT` está em `src/app.py`, nas funções `painel` e `relatorio`.
+O `.env` não sobe pro Git. Quem grava no disco é o PostgreSQL; a aplicação só manda SQL por cima do `psycopg`.
 
-**Function:** `fn_calcular_total_pedido(id_pedido)`  
-Devolve o total do pedido. Usada na lista e no detalhe de pedidos (`src/app.py`).
+### Tabelas
 
-**Procedure:** `sp_realizar_venda(id_cliente, produtos, quantidades, observacao, id_pedido)`  
-Cria o pedido, grava os itens com o preço da hora e baixa o estoque. A tela Nova venda faz o `CALL` em `registrar_venda`, no `src/app.py`.
+- `clientes` — nome, e-mail (único), telefone
+- `produtos` — nome, preço, estoque, ativo
+- `pedidos` — cliente, data, observação
+- `itens_pedido` — produto, quantidade e `preco_unitario` da hora da venda
+
+O preço fica gravado no item de propósito: se o produto mudar de preço depois, o pedido antigo não muda.
+
+Script: `database/tables/01_tabelas.sql`.
+
+## View, function e procedure
+
+### View `vw_relatorio_vendas`
+
+Arquivo: `database/views/01_vw_relatorio_vendas.sql`
+
+Junta pedido, cliente e itens e devolve uma linha por pedido, com total.
+
+Usada em `src/app.py` nas funções `painel` e `relatorio`.
+
+Com os dados de exemplo: 3 vendas e faturamento **R$ 215,47**.
+
+### Function `fn_calcular_total_pedido`
+
+Arquivo: `database/functions/01_fn_calcular_total_pedido.sql`
+
+Recebe o id do pedido e devolve a soma de quantidade × preço do item. Não grava nada.
+
+Usada em `src/app.py` nas funções `pedidos` e `detalhe_pedido`.
+
+Pedido 1 (Ana Lima): **R$ 84,67**.
+
+### Procedure `sp_realizar_venda`
+
+Arquivo: `database/procedures/01_sp_realizar_venda.sql`
+
+Chamada pela tela Nova venda, na função `registrar_venda` de `src/app.py`:
+
+```sql
+CALL sp_realizar_venda(%s, %s, %s, %s, %s)
+```
+
+Ela confere cliente e itens, cria o pedido, grava os itens com o preço da hora e baixa o estoque. Se não tiver estoque, recusa e não grava.
+
+Exemplo: o mel começa com 4 unidades; vender 5 mostra o erro da procedure e o estoque continua 4.
+
+## Estrutura do projeto
+
+```
+├── .env.example
+├── requirements.txt
+├── database/
+│   ├── 00_criar_banco.sql
+│   ├── setup.sql
+│   ├── tables/
+│   ├── functions/
+│   ├── views/
+│   ├── procedures/
+│   └── inserts/
+└── src/
+    ├── init_db.py      # cria o banco e carrega os scripts
+    ├── banco.py        # conexão e consultas
+    ├── app.py          # telas (Flask)
+    ├── templates/
+    └── static/css/
+```
+
+`src/init_db.py` cria o banco se precisar e roda os scripts de novo. Isso apaga os dados da aplicação e coloca o exemplo outra vez.
 
 ## Como executar
-
-1. Instale o PostgreSQL e anote a senha do usuário `postgres`.
-2. Na pasta do projeto:
 
 ```powershell
 cd "D:\CRUD PBD"
@@ -53,28 +129,20 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-3. Coloque a senha no arquivo `.env`.
-4. Crie o banco e os dados de exemplo (isso apaga o que já existir na aplicação):
+Coloque a senha no `.env` e rode:
 
 ```powershell
 python src/init_db.py
 python src/app.py
 ```
 
-5. Abra http://127.0.0.1:5000
+Abra http://127.0.0.1:5000
 
-O pedido 1 fica em R$ 84,67. O faturamento da view fica em R$ 215,47. O mel tem 4 unidades: vender 5 mostra a mensagem da procedure e não grava a venda.
+Também dá para usar o `psql` com `database/00_criar_banco.sql` e `database/setup.sql`, mas o caminho mais simples é o `init_db.py`.
 
-Quem for usar o `psql` pode rodar `database/00_criar_banco.sql` e depois `database/setup.sql`.
+## Conferência rápida
 
-## Vídeo
-
-O roteiro está em [docs/roteiro-video.md](docs/roteiro-video.md). O vídeo precisa ser gravado por você.
-
-## Antes de entregar
-
-- [ ] Preencher nome, disciplina e professor
-- [ ] Rodar o projeto
-- [ ] Mostrar relatório, total do pedido e uma venda
-- [ ] Publicar no GitHub
-- [ ] Gravar o vídeo
+- Pedido 1 = R$ 84,67 (function)
+- Faturamento da view = R$ 215,47
+- Nova venda baixa estoque e aparece no relatório
+- Vender 5 de mel não grava a venda
