@@ -4,9 +4,9 @@ Sistema de vendas de uma mercearia: cadastro de clientes e produtos, registro de
 
 **Vídeo:** https://youtu.be/DNc1sK8VqmE
 
-- **Integrante:** [seu nome completo]
-- **Disciplina:** [nome da disciplina]
-- **Professor:** [nome do professor]
+- **Integrante:** Caio Campos
+- **Disciplina:** Projeto de Banco de Dados
+- **Professor:** Anderson Soares
 
 ## O que o sistema faz
 
