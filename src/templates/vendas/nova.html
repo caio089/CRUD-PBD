@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titulo %}Nova venda · Aurora Vendas{% endblock %}
+{% block conteudo %}
+<h1>Nova venda</h1>
+<p class="nota">Ao confirmar, o sistema chama a procedure <code>sp_realizar_venda</code>.</p>
+
+{% if not clientes or not produtos %}
+  <p>Cadastre um cliente e um produto com estoque antes de vender.</p>
+{% else %}
+<form method="post">
+  <label>Cliente</label>
+  <select name="id_cliente" required>
+    <option value="">Selecione</option>
+    {% for cliente in clientes %}
+      <option value="{{ cliente.id }}" {% if id_cliente|string == cliente.id|string %}selected{% endif %}>
+        {{ cliente.nome }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <h2>Itens</h2>
+  <p>Pode deixar linhas em branco. Preencha só o que for vender.</p>
+  {% for item in itens %}
+  <div class="linha-item">
+    <label>Produto</label>
+    <select name="produto_id">
+      <option value="">Selecione</option>
+      {% for produto in produtos %}
+        <option value="{{ produto.id }}" {% if item.produto_id|string == produto.id|string %}selected{% endif %}>
+          {{ produto.nome }} — {{ produto.preco|moeda }} (estoque {{ produto.estoque }})
+        </option>
+      {% endfor %}
+    </select>
+    <label>Quantidade</label>
+    <input name="quantidade" type="number" min="1" value="{{ item.quantidade }}">
+  </div>
+  {% endfor %}
+
+  <label>Observação</label>
+  <input name="observacao" value="{{ observacao }}" maxlength="255">
+
+  <p><button type="submit">Confirmar venda</button></p>
+</form>
+{% endif %}
+{% endblock %}

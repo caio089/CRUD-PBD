@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titulo %}Clientes · Aurora Vendas{% endblock %}
+{% block conteudo %}
+<h1>Clientes</h1>
+<p><a class="botao" href="{{ url_for('novo_cliente') }}">Novo cliente</a></p>
+
+<form method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Nome ou e-mail">
+  <button type="submit">Buscar</button>
+</form>
+
+{% if clientes %}
+<table>
+  <tr>
+    <th>Nome</th>
+    <th>E-mail</th>
+    <th>Telefone</th>
+    <th></th>
+  </tr>
+  {% for cliente in clientes %}
+  <tr>
+    <td>{{ cliente.nome }}</td>
+    <td>{{ cliente.email }}</td>
+    <td>{{ cliente.telefone or "—" }}</td>
+    <td>
+      <a href="{{ url_for('editar_cliente', id_cliente=cliente.id) }}">Editar</a>
+      <form class="inline" method="post" action="{{ url_for('excluir_cliente', id_cliente=cliente.id) }}" onsubmit="return confirm('Excluir este cliente?');">
+        <button type="submit">Excluir</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Nenhum cliente encontrado.</p>
+{% endif %}
+{% endblock %}

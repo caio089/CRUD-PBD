@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}Relatório · Aurora Vendas{% endblock %}
+{% block conteudo %}
+<h1>Relatório de vendas</h1>
+<p class="nota">Esta tela lê a view <code>vw_relatorio_vendas</code>.</p>
+
+<form method="get" class="filtros">
+  <label>De <input type="date" name="inicio" value="{{ inicio }}"></label>
+  <label>Até <input type="date" name="fim" value="{{ fim }}"></label>
+  <label>Cliente <input type="search" name="cliente" value="{{ cliente }}"></label>
+  <button type="submit">Filtrar</button>
+  <a href="{{ url_for('relatorio') }}">Limpar</a>
+</form>
+
+<div class="cards">
+  <div class="card"><span>Vendas</span><strong>{{ qtd }}</strong></div>
+  <div class="card"><span>Faturamento</span><strong>{{ faturamento|moeda }}</strong></div>
+  <div class="card"><span>Ticket médio</span><strong>{{ ticket|moeda }}</strong></div>
+</div>
+
+{% if linhas %}
+<table>
+  <tr>
+    <th>Pedido</th>
+    <th>Data</th>
+    <th>Cliente</th>
+    <th>E-mail</th>
+    <th>Itens</th>
+    <th>Unidades</th>
+    <th>Total</th>
+  </tr>
+  {% for linha in linhas %}
+  <tr>
+    <td><a href="{{ url_for('detalhe_pedido', id_pedido=linha.id_pedido) }}">#{{ linha.id_pedido }}</a></td>
+    <td>{{ linha.data_pedido|datahora }}</td>
+    <td>{{ linha.cliente }}</td>
+    <td>{{ linha.email }}</td>
+    <td>{{ linha.qtd_itens }}</td>
+    <td>{{ linha.qtd_produtos }}</td>
+    <td>{{ linha.valor_total|moeda }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Nenhuma venda encontrada.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+.venv/
+.pg-teste/
+__pycache__/
+*.pyc
+.env
+.idea/
+.vscode/

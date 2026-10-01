@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Produtos · Aurora Vendas{% endblock %}
+{% block conteudo %}
+<h1>Produtos</h1>
+<p class="nota">A baixa do estoque na venda é feita pela procedure, não por esta tela.</p>
+<p><a class="botao" href="{{ url_for('novo_produto') }}">Novo produto</a></p>
+
+<form method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Nome do produto">
+  <button type="submit">Buscar</button>
+</form>
+
+{% if produtos %}
+<table>
+  <tr>
+    <th>Nome</th>
+    <th>Preço</th>
+    <th>Estoque</th>
+    <th>Situação</th>
+    <th></th>
+  </tr>
+  {% for produto in produtos %}
+  <tr>
+    <td>{{ produto.nome }}</td>
+    <td>{{ produto.preco|moeda }}</td>
+    <td>{{ produto.estoque }}</td>
+    <td>{% if produto.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+    <td>
+      <a href="{{ url_for('editar_produto', id_produto=produto.id) }}">Editar</a>
+      <form class="inline" method="post" action="{{ url_for('excluir_produto', id_produto=produto.id) }}" onsubmit="return confirm('Excluir este produto?');">
+        <button type="submit">Excluir</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Nenhum produto encontrado.</p>
+{% endif %}
+{% endblock %}

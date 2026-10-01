@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block titulo %}Painel · Aurora Vendas{% endblock %}
+{% block conteudo %}
+<h1>Painel</h1>
+<p class="nota">Os números de vendas vêm da view <code>vw_relatorio_vendas</code>.</p>
+
+<div class="cards">
+  <div class="card"><span>Vendas</span><strong>{{ resumo.qtd_vendas }}</strong></div>
+  <div class="card"><span>Faturamento</span><strong>{{ resumo.faturamento|moeda }}</strong></div>
+  <div class="card"><span>Clientes</span><strong>{{ qtd_clientes }}</strong></div>
+  <div class="card"><span>Produtos ativos</span><strong>{{ qtd_produtos }}</strong></div>
+</div>
+
+<h2>Últimas vendas</h2>
+{% if vendas %}
+<table>
+  <tr>
+    <th>Pedido</th>
+    <th>Data</th>
+    <th>Cliente</th>
+    <th>Total</th>
+  </tr>
+  {% for venda in vendas %}
+  <tr>
+    <td><a href="{{ url_for('detalhe_pedido', id_pedido=venda.id_pedido) }}">#{{ venda.id_pedido }}</a></td>
+    <td>{{ venda.data_pedido|datahora }}</td>
+    <td>{{ venda.cliente }}</td>
+    <td>{{ venda.valor_total|moeda }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Nenhuma venda ainda.</p>
+{% endif %}
+
+<h2>Estoque baixo</h2>
+{% if estoque_baixo %}
+<ul>
+  {% for produto in estoque_baixo %}
+  <li>{{ produto.nome }} — {{ produto.estoque }} un.</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>Nenhum produto com estoque baixo.</p>
+{% endif %}
+{% endblock %}

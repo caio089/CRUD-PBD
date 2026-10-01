@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Pedido #{{ pedido.id }} · Aurora Vendas{% endblock %}
+{% block conteudo %}
+<h1>Pedido #{{ pedido.id }}</h1>
+<p class="nota">Total calculado pela function <code>fn_calcular_total_pedido</code>.</p>
+<p><a href="{{ url_for('pedidos') }}">Voltar</a></p>
+
+<p><strong>Data:</strong> {{ pedido.data_pedido|datahora }}</p>
+<p><strong>Cliente:</strong> {{ pedido.cliente }}</p>
+<p><strong>E-mail:</strong> {{ pedido.email }}</p>
+<p><strong>Telefone:</strong> {{ pedido.telefone or "—" }}</p>
+{% if pedido.observacao %}
+<p><strong>Observação:</strong> {{ pedido.observacao }}</p>
+{% endif %}
+
+<table>
+  <tr>
+    <th>Produto</th>
+    <th>Qtd.</th>
+    <th>Preço</th>
+    <th>Subtotal</th>
+  </tr>
+  {% for item in itens %}
+  <tr>
+    <td>{{ item.nome }}</td>
+    <td>{{ item.quantidade }}</td>
+    <td>{{ item.preco_unitario|moeda }}</td>
+    <td>{{ item.subtotal|moeda }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<p class="total">Total: <strong>{{ pedido.valor_total|moeda }}</strong></p>
+{% endblock %}

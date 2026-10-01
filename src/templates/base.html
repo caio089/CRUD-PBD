@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Aurora Vendas{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+</head>
+<body>
+  <nav>
+    <strong>Aurora Vendas</strong>
+    <a href="{{ url_for('painel') }}">Painel</a>
+    <a href="{{ url_for('clientes') }}">Clientes</a>
+    <a href="{{ url_for('produtos') }}">Produtos</a>
+    <a href="{{ url_for('nova_venda') }}">Nova venda</a>
+    <a href="{{ url_for('pedidos') }}">Pedidos</a>
+    <a href="{{ url_for('relatorio') }}">Relatório</a>
+  </nav>
+  <main>
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% for tipo, texto in mensagens %}
+        <p class="aviso aviso-{{ tipo }}">{{ texto }}</p>
+      {% endfor %}
+    {% endwith %}
+    {% block conteudo %}{% endblock %}
+  </main>
+</body>
+</html>
