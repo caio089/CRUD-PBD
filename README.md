@@ -9,7 +9,7 @@ O sistema permite cadastrar clientes e produtos, registrar vendas com baixa de e
 | **Integrante** | Caio Campos |
 | **Disciplina** | Projeto de Banco de Dados |
 | **Professor** | Anderson Soares |
-| **Vídeo** | [Assistir no YouTube](https://youtu.be/DNc1sK8VqmE) |
+| **Vídeo** | [Assistir no YouTube](https://youtu.be/w1R-pM8kt2U) |
 | **Repositório** | [caio089/CRUD-PBD](https://github.com/caio089/CRUD-PBD) |
 
 ---
@@ -186,4 +186,4 @@ Também é possível usar o `psql` com `database/00_criar_banco.sql` e `database
 
 Demonstração completa do sistema (telas, view, function e procedure):
 
-**https://youtu.be/DNc1sK8VqmE**
+**https://youtu.be/w1R-pM8kt2U**
