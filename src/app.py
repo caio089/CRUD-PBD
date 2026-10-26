@@ -7,14 +7,22 @@ Telas que usam o banco de um jeito especial:
 """
 
 from decimal import Decimal, InvalidOperation
+import os
+import secrets
 
 import psycopg
 from flask import Flask, flash, redirect, render_template, request, url_for
 
 from banco import buscar_todos, buscar_um, conectar, executar, mensagem_banco
+from cache import invalidar, resumo_painel
 
 app = Flask(__name__)
-app.secret_key = "aurora123"
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
+
+
+@app.context_processor
+def informacoes_do_banco():
+    return {"banco_supabase": bool(os.getenv("SUPABASE_DB_URL"))}
 
 
 def moeda(valor):
@@ -55,6 +63,7 @@ def registrar_venda(id_cliente, produtos, quantidades, observacao):
         cur.execute("SELECT currval(pg_get_serial_sequence('pedidos', 'id')) AS id")
         id_pedido = cur.fetchone()["id"]
         conn.commit()
+        invalidar()
         return id_pedido
     except Exception:
         conn.rollback()
@@ -101,13 +110,13 @@ def itens_do_formulario():
 
 @app.route("/")
 def painel():
-    resumo = buscar_um(
+    resumo, origem_cache = resumo_painel(lambda: buscar_um(
         """
         SELECT COUNT(*) AS qtd_vendas,
                COALESCE(SUM(valor_total), 0) AS faturamento
         FROM vw_relatorio_vendas
         """
-    )
+    ))
     vendas = buscar_todos(
         """
         SELECT id_pedido, data_pedido, cliente, valor_total
@@ -129,6 +138,7 @@ def painel():
     return render_template(
         "painel.html",
         resumo=resumo,
+        origem_cache=origem_cache,
         vendas=vendas,
         qtd_clientes=qtd_clientes["total"],
         qtd_produtos=qtd_produtos["total"],
@@ -437,6 +447,11 @@ def nova_venda():
             flash(str(erro), "erro")
         except psycopg.Error as erro:
             flash(mensagem_banco(erro), "erro")
+            # A disponibilidade pode ter mudado desde que a venda começou.
+            lista_produtos = buscar_todos(
+                "SELECT id, nome, preco, estoque FROM produtos "
+                "WHERE ativo = TRUE AND estoque > 0 ORDER BY nome"
+            )
         else:
             flash("Venda registrada.", "ok")
             return redirect(url_for("detalhe_pedido", id_pedido=id_pedido))
@@ -555,4 +570,4 @@ def relatorio():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="127.0.0.1", port=int(os.getenv("PORT", "5001")), debug=False)

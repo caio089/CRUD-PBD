@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block titulo %}Produtos · Aurora Vendas{% endblock %}
 {% block conteudo %}
-<h1>Produtos</h1>
-<p class="nota">A baixa do estoque na venda é feita pela procedure, não por esta tela.</p>
+<h1>Produtos<span class="heading-dot">.</span></h1>
+<p>Organize seu catálogo e acompanhe o estoque.</p>
 <p><a class="botao" href="{{ url_for('novo_produto') }}">Novo produto</a></p>
 
 <form method="get">
-  <input type="search" name="q" value="{{ q }}" placeholder="Nome do produto">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar produto" aria-label="Buscar produto">
   <button type="submit">Buscar</button>
 </form>
 

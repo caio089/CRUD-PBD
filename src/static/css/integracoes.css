@@ -1,0 +1,26 @@
+.integration-panel {
+  background: #fff;
+  border: 1px solid #e5ece7;
+  border-radius: 18px;
+  padding: 24px;
+  margin: 0 0 30px;
+  box-shadow: 0 8px 28px rgba(25, 61, 47, .04);
+}
+.integration-heading { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.integration-heading h2 { margin: 5px 0; font-size: 21px; }
+.integration-heading p { margin: 0; color: #738078; font-size: 14px; }
+.integration-tag { background: #edf6ef; color: #47785a; border-radius: 20px; padding: 7px 10px; font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+.integration-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+.integration-item { display: flex; gap: 13px; padding: 17px; border-radius: 14px; background: #f7faf7; }
+.integration-symbol { display: inline-flex; flex: 0 0 36px; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 10px; font-size: 18px; }
+.supabase-symbol { background: #def3e4; color: #288758; }
+.redis-symbol { background: #fae5e1; color: #c04c40; }
+.integration-item h3 { margin: 0 0 6px; font-size: 15px; }
+.integration-item h3 small { display: block; color: #819086; font-size: 11px; font-weight: 500; margin-top: 3px; }
+.integration-item p { margin: 0; color: #596a60; font-size: 13px; line-height: 1.55; }
+.integration-item .integration-warning { margin-top: 8px; color: #a16a18; }
+.integration-status { display: flex; align-items: baseline; gap: 9px; margin-top: 17px; font-size: 13px; color: #586b60; line-height: 1.5; }
+.integration-demo { margin: 10px 0 0; font-size: 12px; color: #78877d; line-height: 1.5; }
+.data-explanation { display: flex; align-items: center; gap: 12px; margin-top: 28px; padding: 15px 17px; border: 1px solid #e2eee5; border-radius: 14px; background: #f5faf6; color: #536a5b; font-size: 13px; line-height: 1.5; }
+.data-explanation a { color: #267452; font-weight: 700; }
+@media (max-width: 650px) { .integration-grid { grid-template-columns: 1fr; } .integration-panel { padding: 18px; } .integration-tag { display: none; } }

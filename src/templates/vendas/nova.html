@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block titulo %}Nova venda · Aurora Vendas{% endblock %}
 {% block conteudo %}
-<h1>Nova venda</h1>
-<p class="nota">Ao confirmar, o sistema chama a procedure <code>sp_realizar_venda</code>.</p>
+<h1>Nova venda<span class="heading-dot">.</span></h1>
+<p>Preencha os dados para registrar uma nova venda.</p>
 
 {% if not clientes or not produtos %}
   <p>Cadastre um cliente e um produto com estoque antes de vender.</p>
 {% else %}
-<form method="post">
-  <label>Cliente</label>
-  <select name="id_cliente" required>
+<form method="post" id="form-venda">
+  <label for="id_cliente">Cliente</label>
+  <select id="id_cliente" name="id_cliente" required>
     <option value="">Selecione</option>
     {% for cliente in clientes %}
       <option value="{{ cliente.id }}" {% if id_cliente|string == cliente.id|string %}selected{% endif %}>
@@ -22,8 +22,8 @@
   <p>Pode deixar linhas em branco. Preencha só o que for vender.</p>
   {% for item in itens %}
   <div class="linha-item">
-    <label>Produto</label>
-    <select name="produto_id">
+    <label for="produto_{{ loop.index }}">Produto</label>
+    <select id="produto_{{ loop.index }}" name="produto_id">
       <option value="">Selecione</option>
       {% for produto in produtos %}
         <option value="{{ produto.id }}" {% if item.produto_id|string == produto.id|string %}selected{% endif %}>
@@ -31,15 +31,27 @@
         </option>
       {% endfor %}
     </select>
-    <label>Quantidade</label>
-    <input name="quantidade" type="number" min="1" value="{{ item.quantidade }}">
+    <label for="quantidade_{{ loop.index }}">Quantidade</label>
+    <input id="quantidade_{{ loop.index }}" name="quantidade" type="number" min="1" value="{{ item.quantidade }}">
   </div>
   {% endfor %}
 
-  <label>Observação</label>
-  <input name="observacao" value="{{ observacao }}" maxlength="255">
+  <label for="observacao">Observação</label>
+  <input id="observacao" name="observacao" value="{{ observacao }}" maxlength="255">
 
-  <p><button type="submit">Confirmar venda</button></p>
+  <p><button type="submit" id="confirmar-venda">Confirmar venda</button></p>
 </form>
+<script>
+  const formularioVenda = document.getElementById('form-venda');
+  const botaoVenda = document.getElementById('confirmar-venda');
+  formularioVenda.addEventListener('submit', () => {
+    botaoVenda.disabled = true;
+    botaoVenda.textContent = 'Registrando venda…';
+  });
+  window.addEventListener('pageshow', () => {
+    botaoVenda.disabled = false;
+    botaoVenda.textContent = 'Confirmar venda';
+  });
+</script>
 {% endif %}
 {% endblock %}

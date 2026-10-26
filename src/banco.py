@@ -11,6 +11,11 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def conectar():
+    url = os.getenv("SUPABASE_DB_URL")
+    if url:
+        conn = psycopg.connect(url, row_factory=dict_row, prepare_threshold=None)
+        conn.execute("SET LOCAL search_path TO aurora, pg_catalog")
+        return conn
     return psycopg.connect(
         host=os.getenv("PGHOST", "localhost"),
         port=os.getenv("PGPORT", "5432"),
@@ -47,6 +52,8 @@ def executar(sql, params=()):
         cur = conn.cursor()
         cur.execute(sql, params)
         conn.commit()
+        from cache import invalidar
+        invalidar()
     except Exception:
         conn.rollback()
         raise

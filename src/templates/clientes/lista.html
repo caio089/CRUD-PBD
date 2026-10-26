@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% block titulo %}Clientes · Aurora Vendas{% endblock %}
 {% block conteudo %}
-<h1>Clientes</h1>
+<h1>Clientes<span class="heading-dot">.</span></h1>
+<p>Seu relacionamento com os clientes começa aqui.</p>
 <p><a class="botao" href="{{ url_for('novo_cliente') }}">Novo cliente</a></p>
 
 <form method="get">
-  <input type="search" name="q" value="{{ q }}" placeholder="Nome ou e-mail">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nome ou e-mail" aria-label="Buscar clientes por nome ou e-mail">
   <button type="submit">Buscar</button>
 </form>
 

@@ -1,46 +1,37 @@
 {% extends "base.html" %}
 {% block titulo %}Painel · Aurora Vendas{% endblock %}
 {% block conteudo %}
-<h1>Painel</h1>
-<p class="nota">Os números de vendas vêm da view <code>vw_relatorio_vendas</code>.</p>
-
-<div class="cards">
-  <div class="card"><span>Vendas</span><strong>{{ resumo.qtd_vendas }}</strong></div>
-  <div class="card"><span>Faturamento</span><strong>{{ resumo.faturamento|moeda }}</strong></div>
-  <div class="card"><span>Clientes</span><strong>{{ qtd_clientes }}</strong></div>
-  <div class="card"><span>Produtos ativos</span><strong>{{ qtd_produtos }}</strong></div>
+<div class="page-heading dashboard-heading">
+  <div><span class="eyebrow"><span class="status-dot"></span> SEU NEGÓCIO EM DIA</span><h1>Olá, bem-vindo de volta<span class="heading-dot">.</span></h1><p>Acompanhe o que acontece na sua mercearia.</p></div>
+  <a class="botao" href="{{ url_for('nova_venda') }}"><span aria-hidden="true">＋</span> Nova venda</a>
 </div>
-
-<h2>Últimas vendas</h2>
-{% if vendas %}
-<table>
-  <tr>
-    <th>Pedido</th>
-    <th>Data</th>
-    <th>Cliente</th>
-    <th>Total</th>
-  </tr>
-  {% for venda in vendas %}
-  <tr>
-    <td><a href="{{ url_for('detalhe_pedido', id_pedido=venda.id_pedido) }}">#{{ venda.id_pedido }}</a></td>
-    <td>{{ venda.data_pedido|datahora }}</td>
-    <td>{{ venda.cliente }}</td>
-    <td>{{ venda.valor_total|moeda }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% else %}
-<p>Nenhuma venda ainda.</p>
-{% endif %}
-
-<h2>Estoque baixo</h2>
-{% if estoque_baixo %}
-<ul>
-  {% for produto in estoque_baixo %}
-  <li>{{ produto.nome }} — {{ produto.estoque }} un.</li>
-  {% endfor %}
-</ul>
-{% else %}
-<p>Nenhum produto com estoque baixo.</p>
-{% endif %}
+<section class="integration-panel" aria-labelledby="integracoes-titulo">
+  <div class="integration-heading"><div><span class="eyebrow">POR TRÁS DO SISTEMA</span><h2 id="integracoes-titulo">Como os dados chegam até você</h2><p>Veja o papel de cada tecnologia neste painel.</p></div><span class="integration-tag">INTEGRAÇÕES</span></div>
+  <div class="integration-grid">
+    <div class="integration-item"><span class="integration-symbol supabase-symbol">▰</span><div><h3>Supabase <small>Banco de dados</small></h3><p>Guarda clientes, produtos, estoque e vendas. É a fonte dos dados do sistema.</p>{% if not banco_supabase %}<p class="integration-warning">Nesta execução, o sistema está configurado para usar PostgreSQL local.</p>{% endif %}</div></div>
+    <div class="integration-item"><span class="integration-symbol redis-symbol">◆</span><div><h3>Redis <small>Cache do painel</small></h3><p>Guarda temporariamente o faturamento e a quantidade de vendas para reduzir consultas repetidas ao banco. Os outros dados do painel são consultados no banco.</p></div></div>
+  </div>
+  <div class="integration-status"><span class="status-dot"></span><span>Origem do resumo nesta abertura: <strong>{{ origem_cache }}</strong>. O cache dura até 60 segundos e é invalidado quando os dados são alterados pelo sistema.</span></div>
+  <p class="integration-demo">Para demonstrar: registre uma venda e volte ao painel; depois atualize a página para observar a origem do resumo mudar para Redis, se o serviço estiver disponível.</p>
+</section>
+<div class="section-heading"><div><span class="eyebrow">VISÃO GERAL</span><h2>Seu negócio em números</h2></div><span class="section-caption">Um resumo de tudo até agora</span></div>
+<div class="cards dashboard-cards">
+  <div class="card"><div class="card-top"><span>Faturamento</span><span class="metric-icon metric-green">↗</span></div><strong>{{ resumo.faturamento|moeda }}</strong><small>Valor total das vendas</small></div>
+  <div class="card"><div class="card-top"><span>Vendas realizadas</span><span class="metric-icon metric-peach">◈</span></div><strong>{{ resumo.qtd_vendas }}</strong><small>Pedidos registrados</small></div>
+  <div class="card"><div class="card-top"><span>Clientes</span><span class="metric-icon metric-blue">♙</span></div><strong>{{ qtd_clientes }}</strong><small>Pessoas cadastradas</small></div>
+  <div class="card"><div class="card-top"><span>Produtos ativos</span><span class="metric-icon metric-yellow">▦</span></div><strong>{{ qtd_produtos }}</strong><small>Disponíveis no catálogo</small></div>
+</div>
+<div class="dashboard-grid">
+  <section class="panel">
+    <div class="panel-header"><div><span class="eyebrow">MOVIMENTAÇÕES</span><h2>Últimas vendas</h2><p>Os pedidos mais recentes da sua loja.</p></div><a class="text-link" href="{{ url_for('pedidos') }}">Ver todos <span aria-hidden="true">↗</span></a></div>
+    {% if vendas %}<div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Data</th><th>Cliente</th><th>Total</th></tr></thead><tbody>
+    {% for venda in vendas %}<tr><td><a class="order-link" href="{{ url_for('detalhe_pedido', id_pedido=venda.id_pedido) }}">#{{ venda.id_pedido }}</a></td><td>{{ venda.data_pedido|datahora }}</td><td>{{ venda.cliente }}</td><td><strong>{{ venda.valor_total|moeda }}</strong></td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<p class="empty-state">Nenhuma venda por aqui ainda.</p>{% endif %}
+  </section>
+  <section class="panel stock-panel">
+    <div class="panel-header"><div><span class="eyebrow">FIQUE DE OLHO</span><h2>Estoque baixo</h2><p>Produtos com até 5 unidades.</p></div><span class="stock-symbol" aria-hidden="true">✳</span></div>
+    {% if estoque_baixo %}<ul class="stock-list">{% for produto in estoque_baixo %}<li><span class="stock-item-icon" aria-hidden="true">▦</span><span class="stock-name">{{ produto.nome }}<small>Disponível em estoque</small></span><span class="stock-count">{{ produto.estoque }} un.</span></li>{% endfor %}</ul>{% else %}<p class="empty-state">Tudo certo! Nenhum produto com estoque baixo.</p>{% endif %}
+    <a class="stock-link" href="{{ url_for('produtos') }}">Gerenciar produtos <span aria-hidden="true">→</span></a>
+  </section>
+</div>
 {% endblock %}

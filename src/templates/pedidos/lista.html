@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block titulo %}Pedidos · Aurora Vendas{% endblock %}
 {% block conteudo %}
-<h1>Pedidos</h1>
-<p class="nota">O total de cada pedido é calculado pela function <code>fn_calcular_total_pedido</code>.</p>
+<h1>Pedidos<span class="heading-dot">.</span></h1>
+<p>Acompanhe todas as vendas da sua mercearia.</p>
 <p><a class="botao" href="{{ url_for('nova_venda') }}">Nova venda</a></p>
 
 {% if pedidos %}

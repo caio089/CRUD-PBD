@@ -54,7 +54,8 @@ BEGIN
         SELECT nome, preco, estoque, ativo
           INTO nome_produto, preco_item, estoque_atual, produto_ativo
           FROM produtos
-         WHERE produtos.id = id_produto;
+         WHERE produtos.id = id_produto
+         FOR UPDATE;
 
         IF NOT FOUND THEN
             RAISE EXCEPTION 'Produto % não encontrado.', id_produto;

@@ -3,26 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d32">
   <title>{% block titulo %}Aurora Vendas{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/integracoes.css') }}">
 </head>
 <body>
-  <nav>
-    <strong>Aurora Vendas</strong>
-    <a href="{{ url_for('painel') }}">Painel</a>
-    <a href="{{ url_for('clientes') }}">Clientes</a>
-    <a href="{{ url_for('produtos') }}">Produtos</a>
-    <a href="{{ url_for('nova_venda') }}">Nova venda</a>
-    <a href="{{ url_for('pedidos') }}">Pedidos</a>
-    <a href="{{ url_for('relatorio') }}">Relatório</a>
-  </nav>
-  <main>
-    {% with mensagens = get_flashed_messages(with_categories=true) %}
-      {% for tipo, texto in mensagens %}
-        <p class="aviso aviso-{{ tipo }}">{{ texto }}</p>
-      {% endfor %}
-    {% endwith %}
-    {% block conteudo %}{% endblock %}
-  </main>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="{{ url_for('painel') }}" aria-label="Aurora Vendas, ir ao painel">
+        <span class="brand-mark" aria-hidden="true">✳</span>
+        <span><strong>aurora<span class="brand-dot">.</span></strong><small>GESTÃO DE VENDAS</small></span>
+      </a>
+      <div class="nav-label">MENU PRINCIPAL</div>
+      <nav class="nav-links" aria-label="Navegação principal">
+        {% set menu = [('painel', '◫', 'Painel'), ('clientes', '♙', 'Clientes'), ('produtos', '▦', 'Produtos'), ('pedidos', '▤', 'Pedidos'), ('relatorio', '◷', 'Relatório')] %}
+        {% for endpoint, icone, nome in menu %}
+        <a href="{{ url_for(endpoint) }}" class="{% if request.endpoint == endpoint %}active{% endif %}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">{{ icone }}</span>{{ nome }}</a>
+        {% endfor %}
+      </nav>
+      <a class="sidebar-action" href="{{ url_for('nova_venda') }}"><span aria-hidden="true">＋</span> Nova venda</a>
+      <div class="sidebar-foot"><span class="status-dot"></span> Seu negócio, mais simples.<small>Feito para o dia a dia da mercearia.</small></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><span>MERCEARIA <span class="topbar-separator">/</span> <strong>Visão geral</strong></span><span class="topbar-right"><span class="status-dot"></span> Aurora Vendas <span class="avatar">A</span></span></header>
+      <main>
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+          {% for tipo, texto in mensagens %}<div class="aviso aviso-{{ tipo }}" role="status">{{ texto }}</div>{% endfor %}
+        {% endwith %}
+        {% block conteudo %}{% endblock %}
+        {% if request.endpoint != 'painel' %}
+        <aside class="data-explanation"><span class="integration-symbol supabase-symbol" aria-hidden="true">▰</span><span><strong>Onde ficam os dados?</strong> {% if banco_supabase %}Esta tela consulta e registra informações no banco PostgreSQL do Supabase.{% else %}Esta execução usa PostgreSQL local; com o Supabase configurado, os dados ficam no banco dele.{% endif %} O Redis é usado no resumo de vendas do <a href="{{ url_for('painel') }}">painel</a>.</span></aside>
+        {% endif %}
+      </main>
+      <footer class="footer">Aurora Vendas <span>Feito para acompanhar o seu negócio.</span></footer>
+    </div>
+  </div>
 </body>
 </html>

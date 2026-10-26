@@ -1,189 +1,83 @@
 # Aurora Vendas
 
-Sistema de vendas de uma mercearia desenvolvido para a disciplina **Projeto de Banco de Dados**.
+Aplicação de gestão de vendas para uma mercearia, desenvolvida para a disciplina Projeto de Banco de Dados. Permite cadastrar clientes e produtos, registrar vendas com baixa de estoque, consultar pedidos e acompanhar faturamento. O PostgreSQL do Supabase mantém os dados e o Redis guarda temporariamente o resumo de vendas do painel.
 
-O sistema permite cadastrar clientes e produtos, registrar vendas com baixa de estoque, consultar pedidos e gerar relatório de faturamento. A regra de negócio principal fica no PostgreSQL: a venda usa **procedure**, o total do pedido usa **function** e o relatório usa **view**.
+**Autor:** Caio Campos · **Professor:** Anderson Soares · **Repositório:** [caio089/CRUD-PBD](https://github.com/caio089/CRUD-PBD)
 
-| | |
-| --- | --- |
-| **Integrante** | Caio Campos |
-| **Disciplina** | Projeto de Banco de Dados |
-| **Professor** | Anderson Soares |
-| **Vídeo** | [Assistir no YouTube](https://youtu.be/w1R-pM8kt2U) |
-| **Repositório** | [caio089/CRUD-PBD](https://github.com/caio089/CRUD-PBD) |
+## Vídeo demonstrativo
 
----
+Assista à [demonstração do Aurora Vendas](https://youtu.be/zgXDQB_bnu8).
 
-## Tecnologias
+## Funcionalidades e tecnologias
 
-- Python 3
-- Flask
-- PostgreSQL
-- HTML e CSS
-- psycopg (conexão e SQL direto nas telas)
+- Painel com faturamento, quantidade de vendas, últimas vendas e estoque baixo.
+- Cadastro, busca, edição e exclusão de clientes e produtos.
+- Registro de vendas, consulta de pedidos e relatório filtrado.
+- Python 3, Flask, HTML e CSS; PostgreSQL hospedado no Supabase, acessado pelo psycopg; Redis para cache; variáveis de ambiente com python-dotenv.
+- A procedure `sp_realizar_venda` registra pedido e itens e baixa o estoque na mesma transação; a function `fn_calcular_total_pedido` calcula os totais; a view `vw_relatorio_vendas` alimenta o painel e o relatório.
 
----
+## Configuração e execução
 
-## O que o sistema faz
+Pré-requisitos: Python 3, um projeto Supabase, a senha do banco desse projeto e um servidor Redis acessível. Use um projeto Supabase de teste: os scripts criam dados de exemplo.
 
-A mercearia precisa vender sem deixar o estoque inconsistente e sem remontar a mesma consulta de relatório em várias telas.
+1. Crie e ative um ambiente virtual, instale as dependências e copie o arquivo de configuração:
 
-Uma venda altera pedido, itens e estoque ao mesmo tempo. Se isso ficasse só no Python, dava para baixar estoque e falhar na hora de gravar o pedido. Por isso a venda completa está na procedure `sp_realizar_venda`. Se algo falha no meio, nada fica salvo pela metade.
-
-### Telas
-
-| Tela | Rota | Descrição |
-| --- | --- | --- |
-| Painel | `/` | Resumo de vendas, faturamento, clientes, produtos e estoque baixo |
-| Clientes | `/clientes` | Cadastro, busca, edição e exclusão de clientes |
-| Produtos | `/produtos` | Cadastro, busca, edição e exclusão de produtos |
-| Nova venda | `/vendas/nova` | Registra a venda chamando a procedure |
-| Pedidos | `/pedidos` | Lista os pedidos; o total vem da function |
-| Detalhe | `/pedidos/<id>` | Mostra itens, preços e total do pedido |
-| Relatório | `/relatorio` | Filtra vendas pela view (cliente e período) |
-
----
-
-## Banco de dados
-
-### Onde os dados ficam
-
-Os dados **não** ficam na pasta do projeto. A pasta `database/` contém apenas os scripts SQL (estrutura, view, function, procedure e inserts de exemplo).
-
-Os registros ficam no PostgreSQL local, no banco `aurora_vendas`. A aplicação conecta usando o arquivo `.env` (copiado de `.env.example`):
-
-```env
-PGHOST=localhost
-PGPORT=5432
-PGUSER=postgres
-PGPASSWORD=sua_senha
-PGDATABASE=aurora_vendas
-```
-
-O arquivo `.env` não sobe para o GitHub. Quem grava no disco é o PostgreSQL; a aplicação envia SQL através do `psycopg`.
-
-### Tabelas
-
-| Tabela | Conteúdo |
-| --- | --- |
-| `clientes` | Nome, e-mail (único) e telefone |
-| `produtos` | Nome, preço, estoque e se está ativo |
-| `pedidos` | Cliente, data e observação |
-| `itens_pedido` | Produto, quantidade e `preco_unitario` da hora da venda |
-
-O preço fica gravado no item de propósito: se o produto mudar de preço depois, o pedido antigo não muda.
-
-Script das tabelas: `database/tables/01_tabelas.sql`
-
----
-
-## View, function e procedure
-
-### View — `vw_relatorio_vendas`
-
-- **Arquivo:** `database/views/01_vw_relatorio_vendas.sql`
-- **O que faz:** junta pedido, cliente e itens e devolve uma linha por pedido, com total
-- **Onde usa:** `src/app.py` → funções `painel` e `relatorio`
-- **Exemplo:** 3 vendas e faturamento de **R$ 215,47**
-
-### Function — `fn_calcular_total_pedido`
-
-- **Arquivo:** `database/functions/01_fn_calcular_total_pedido.sql`
-- **O que faz:** recebe o id do pedido e devolve a soma de quantidade × preço do item (não grava nada)
-- **Onde usa:** `src/app.py` → funções `pedidos` e `detalhe_pedido`
-- **Exemplo:** pedido 1 (Ana Lima) = **R$ 84,67**
-
-### Procedure — `sp_realizar_venda`
-
-- **Arquivo:** `database/procedures/01_sp_realizar_venda.sql`
-- **O que faz:** confere cliente e itens, cria o pedido, grava os itens com o preço da hora e baixa o estoque
-- **Onde usa:** tela Nova venda → função `registrar_venda` em `src/app.py`
-
-```sql
-CALL sp_realizar_venda(%s, %s, %s, %s, %s)
-```
-
-Se não houver estoque suficiente, a procedure recusa e não grava a venda.  
-Exemplo: o mel começa com 4 unidades; tentar vender 5 mostra o erro e o estoque continua 4.
-
----
-
-## Estrutura do projeto
-
-```
-CRUD-PBD/
-├── .env.example
-├── requirements.txt
-├── README.md
-├── database/
-│   ├── 00_criar_banco.sql
-│   ├── setup.sql
-│   ├── tables/          # tabelas
-│   ├── functions/       # fn_calcular_total_pedido
-│   ├── views/           # vw_relatorio_vendas
-│   ├── procedures/      # sp_realizar_venda
-│   └── inserts/         # dados de exemplo
-└── src/
-    ├── init_db.py       # cria o banco e carrega os scripts
-    ├── banco.py         # conexão e consultas
-    ├── app.py           # rotas das telas (Flask)
-    ├── templates/       # HTML
-    └── static/css/      # estilo
-```
-
-O comando `python src/init_db.py` cria o banco se precisar e roda os scripts de novo. Isso apaga os dados da aplicação e recarrega o exemplo.
-
----
-
-## Como executar
-
-1. Instale o PostgreSQL e anote a senha do usuário `postgres`.
-2. Na pasta do projeto:
-
-```powershell
-cd "D:\CRUD PBD"
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-Copy-Item .env.example .env
+cp .env.example .env
 ```
 
-3. Coloque a senha no arquivo `.env`.
-4. Crie o banco e suba as telas:
+No Windows, ative com `.venv\Scripts\Activate.ps1` e copie com `Copy-Item .env.example .env`.
 
-```powershell
-python src/init_db.py
+2. No painel do Supabase, abra **Connect** e copie a string de conexão PostgreSQL do **Session pooler** (ou conexão direta, se sua rede suportar IPv6). Coloque-a em `SUPABASE_DB_URL` no `.env`, substituindo a senha e adicionando `?sslmode=require` caso a URL ainda não contenha parâmetros. Caracteres especiais da senha precisam ser codificados para URL. Não use a chave de API no lugar da URL do banco. Veja a [documentação oficial de conexões](https://supabase.com/docs/guides/database/connecting-to-postgres).
+
+3. Inicie o Redis. Por exemplo, com Docker:
+
+```bash
+docker run --name aurora-redis -p 127.0.0.1:6379:6379 -d redis:7
+```
+
+Configure `REDIS_URL=redis://localhost:6379/0`. Para um serviço remoto, use a URL e o TLS fornecidos pelo provedor. Use uma instância ou banco Redis dedicado ao projeto. Defina também uma `FLASK_SECRET_KEY` aleatória no `.env`. Nunca envie `.env`, URLs com senha ou chaves ao GitHub.
+
+4. Crie os objetos e dados de exemplo no Supabase e inicie a aplicação:
+
+```bash
+python src/init_supabase.py
 python src/app.py
 ```
 
-5. Abra http://127.0.0.1:5000
+Abra <http://127.0.0.1:5001>. O inicializador cria o schema `aurora` em uma transação e recusa executá-lo se o schema já existir, para preservar os dados. Ele não deve ser usado para atualizar instalações existentes. `src/init_db.py` continua disponível apenas para PostgreSQL local e **apaga os dados da aplicação local** ao recriar as tabelas.
 
-Também é possível usar o `psql` com `database/00_criar_banco.sql` e `database/setup.sql`. O caminho mais simples é o `init_db.py`.
+## Supabase
 
----
+O Flask conecta diretamente ao PostgreSQL do Supabase pelo backend, usando `SUPABASE_DB_URL`; as telas não recebem a senha. As tabelas, view, function, procedure e dados de exemplo ficam no schema `aurora`, que não é exposto pela Data API na configuração padrão. O acesso público ao schema é revogado e as tabelas têm RLS habilitada sem políticas públicas. Não adicione `aurora` aos schemas expostos sem configurar permissões e políticas adequadas.
+
+A aplicação usa uma conexão privilegiada no servidor e não implementa autenticação de usuários. Ela foi preparada para execução local e demonstração acadêmica: não a exponha na internet ou use dados reais sem implementar autenticação, autorização e medidas adicionais de segurança. A integração é por conexão PostgreSQL, sem necessidade da biblioteca ou chave de API do Supabase.
+
+## Redis e demonstração
+
+O painel consulta a view para calcular a quantidade de vendas e o faturamento. Como esses totais podem ser lidos várias vezes sem mudar, o backend guarda o resultado no Redis por **60 segundos**. Na primeira leitura, consulta o banco; nas seguintes, reutiliza o valor em cache, reduzindo consultas repetidas. O restante do painel continua consultando o banco diretamente.
+
+Após gravações feitas pela aplicação, o cache é invalidado depois do commit; a próxima leitura consulta o banco novamente. Uma versão no Redis impede que uma consulta anterior a uma gravação substitua o cache depois dela. Alterações realizadas diretamente no banco ou durante indisponibilidade do Redis podem deixar o resumo antigo até o TTL expirar. Se o Redis estiver indisponível, a aplicação consulta o banco e informa isso no painel; o banco continua sendo a fonte de dados.
+
+Para demonstrar no vídeo:
+
+1. Abra o painel e observe a origem do resumo. Quando o cache estiver vazio ou expirado, a leitura vem de **Supabase/banco (consulta)**; atualize dentro de 60 segundos para ver **Redis (cache)**. Se já houver um resumo válido no cache, a primeira abertura poderá mostrar Redis.
+2. No Supabase, abra o Table Editor ou SQL Editor e mostre os dados no schema `aurora`. Crie uma venda pela interface e mostre o pedido e a baixa do estoque no banco.
+3. Volte ao painel: depois da venda, o resumo vem novamente do banco; atualize outra vez para ver a leitura do Redis.
+4. Opcionalmente, em outro terminal, execute `docker exec aurora-redis redis-cli GET aurora:painel:resumo` e `docker exec aurora-redis redis-cli TTL aurora:painel:resumo` para mostrar o valor e sua expiração. O texto do painel é a fonte usada naquela requisição; se a chave já tiver expirado, atualize o painel antes de consultar o Redis.
+5. Explique que o cache reduz consultas repetidas e que sua invalidação e TTL limitam dados desatualizados. Mostre também o cadastro e o relatório na interface.
 
 ## Dados de exemplo
 
-| Pedido | Cliente | Total |
-| --- | --- | --- |
-| 1 | Ana Lima | R$ 84,67 |
-| 2 | Bruno Costa | R$ 46,90 |
-| 3 | Carla Mendes | R$ 83,90 |
-| **Total (view)** | | **R$ 215,47** |
+A instalação nova inclui três pedidos, totalizando R$ 215,47. O pedido 1 totaliza R$ 84,67. O mel começa com quatro unidades: tentar vender cinco deve retornar erro sem gravar uma venda parcial.
 
----
+## Organização
 
-## Como testar
-
-- Pedido 1 aparece como **R$ 84,67** (valor da function)
-- Painel e relatório mostram **3 vendas** e faturamento **R$ 215,47** (valor da view)
-- Uma venda nova baixa o estoque e aparece no relatório
-- Vender 5 unidades de mel mostra o erro da procedure e não grava a venda
-
----
-
-## Vídeo
-
-Demonstração completa do sistema (telas, view, function e procedure):
-
-**https://youtu.be/w1R-pM8kt2U**
+- `src/app.py`: rotas e telas; `src/banco.py`: conexão e consultas.
+- `src/cache.py`: leitura, gravação e invalidação do cache Redis.
+- `src/init_supabase.py`: instalação inicial no Supabase.
+- `database/`: tabelas, function, view, procedure e dados de exemplo.
+- `src/templates/` e `src/static/`: interface HTML e CSS.
